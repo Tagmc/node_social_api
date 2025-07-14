@@ -2,7 +2,13 @@ import { ObjectId } from 'mongodb'
 import { Request, Response } from 'express'
 import usersService from '~/services/users.services'
 import { NextFunction, ParamsDictionary } from 'express-serve-static-core'
-import { LogoutRequestBody, RegisterRequestBody, TokenPayLoad, VerifyEmailReqBody } from '~/models/requests/User.requests'
+import {
+  ForgotPasswordBody,
+  LogoutRequestBody,
+  RegisterRequestBody,
+  TokenPayLoad,
+  VerifyEmailReqBody
+} from '~/models/requests/User.requests'
 import User from '~/models/schemas/User.schema'
 import { usersMessages } from '~/constants/messages'
 import databaseService from '~/services/database.services'
@@ -39,7 +45,11 @@ export const logoutController: ResponseController = async (
     result
   })
 }
-export const emailVerifyController: ResponseController = async (req: Request<ParamsDictionary, any, VerifyEmailReqBody>, res: Response, next: NextFunction) => {
+export const emailVerifyController: ResponseController = async (
+  req: Request<ParamsDictionary, any, VerifyEmailReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
   const { user_id } = req.decoded_email_verify_token as TokenPayLoad
   const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
   if (!user) {
@@ -66,7 +76,7 @@ export const resendVerifyEmailController: ResponseController = async (
   next: NextFunction
 ) => {
   const { user_id } = req.decoded_authorization as TokenPayLoad
-  const user = await databaseService.users.findOne({_id: new ObjectId(user_id)})
+  const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
   if (!user) {
     return res.status(httpStatus.NOT_FOUND).json({
       message: usersMessages.USER_NOT_FOUND
@@ -79,6 +89,17 @@ export const resendVerifyEmailController: ResponseController = async (
   }
   const result = await usersService.resendVerifyEmail(user_id)
   return res.status(httpStatus.ACCEPTED).json({
+    result
+  })
+}
+export const forgotPasswordController: ResponseController = async (
+  req: Request<ParamsDictionary, any, ForgotPasswordBody>,
+  res: Response,
+  next: NextFunction
+) => {
+  const { _id } = req.user as User 
+  const result = await usersService.forgotPassword((_id as ObjectId).toString())
+  return res.status(httpStatus.OK).json({
     result
   })
 }

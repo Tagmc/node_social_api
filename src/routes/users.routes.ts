@@ -1,6 +1,6 @@
-import { emailVerifyTokenValidator, refreshTokenValidator } from './../middlewares/users.middlewares'
+import { emailVerifyTokenValidator, forgotPasswordValidator, refreshTokenValidator } from './../middlewares/users.middlewares'
 import { Router } from 'express'
-import { emailVerifyController, loginController, logoutController, registerController, resendVerifyEmailController } from '~/controllers/users.controllers'
+import { emailVerifyController, forgotPasswordController, loginController, logoutController, registerController, resendVerifyEmailController } from '~/controllers/users.controllers'
 import { accessTokenValidator, loginValidator, registerValidator } from '~/middlewares/users.middlewares'
 import { wrapRequestHandler } from '~/utils/handlers'
 
@@ -42,5 +42,11 @@ Method: POST
 Header: { Authorization: Bearer <token>}
 */
 usersRouter.post('/resend-verify-email', accessTokenValidator, emailVerifyTokenValidator, wrapRequestHandler(resendVerifyEmailController))
-
+/*
+Description. Submit email to reset password, send email to user
+Path:  /forgot-password
+Method: POST
+Header: { email: string }
+*/
+usersRouter.post('/forgot-password', forgotPasswordValidator, wrapRequestHandler(forgotPasswordController))
 export default usersRouter
