@@ -171,7 +171,7 @@ export const accessTokenValidator = validate(
         },
         custom: {
           options: async (values: string, { req }) => {
-            const access_token = values.split('')[1]
+            const access_token = (values || '').split('')[1]
             if (!access_token) {
               throw new ErrorWithStatus({
                 message: usersMessages.ACCESS_TOKEN_IS_REQUIRED,
@@ -179,7 +179,10 @@ export const accessTokenValidator = validate(
               })
             }
             try {
-              const decoded_authorization = await verifyToken({ token: access_token })
+              const decoded_authorization = await verifyToken({
+                token: access_token,
+                privateKey: process.env.JWT_SECRET_ACCESS_TOKEN as string
+              })
               ;(req as Request).decoded_authorization = decoded_authorization
             } catch (error) {
               throw new ErrorWithStatus({
@@ -200,20 +203,24 @@ export const refreshTokenValidator = validate(
   checkSchema(
     {
       refresh_token: {
-        notEmpty: {
-          errorMessage: usersMessages.REFRESH_TOKEN_IS_REQUIRED
-        },
+        trim: true,
         custom: {
           options: async (value: string, { req }) => {
             try {
+              if (!value) {
+                throw new ErrorWithStatus({
+                  message: usersMessages.REFRESH_TOKEN_IS_REQUIRED,
+                  status: httpStatus.UNAUTHORIZED
+                })
+              }
               //2 doan code await khong lien quan den nhau nen co the dung Promise.all de no chay song song toi uu hieu suat
               const [decoded_refresh_token, refresh_token] = await Promise.all([
-                verifyToken({ token: value }),
+                verifyToken({ token: value, privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string }),
                 databaseService.refreshTokens.findOne({ token: value })
               ])
               if (refresh_token === null) {
                 throw new ErrorWithStatus({
-                  message: usersMessages.USED_REFRESH_TOKEN_OR_NOT_EXIST,
+                  message: usersMessages.USER_REFRESH_TOKEN_OR_NOT_EXIST,
                   status: httpStatus.UNAUTHORIZED
                 })
               }
@@ -227,6 +234,42 @@ export const refreshTokenValidator = validate(
               }
               throw error
             }
+            return true
+          }
+        }
+      }
+    },
+    ['body']
+  )
+)
+
+export const emailVerifyTokenValidator = validate(
+  checkSchema(
+    {
+      email_verify_token: {
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            if (!value) {
+              throw new ErrorWithStatus({
+                message: usersMessages.EMAIL_VERIFY_TOKEN_IS_REQUIRED,
+                status: httpStatus.UNAUTHORIZED
+              })
+            }
+            try {
+              //2 doan code await khong lien quan den nhau nen co the dung Promise.all de no chay song song toi uu hieu suat
+              const decoded_email_verify_token = await verifyToken({
+                token: value,
+                privateKey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN as string
+              })
+              ;(req as Request).decoded_refresh_token = decoded_email_verify_token
+            } catch (error) {
+              throw new ErrorWithStatus({
+                message: capitalize((error as JsonWebTokenError).message),
+                status: httpStatus.UNAUTHORIZED
+              })
+            }
+
             return true
           }
         }

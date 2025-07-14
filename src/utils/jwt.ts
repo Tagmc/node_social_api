@@ -6,13 +6,13 @@ config()
 // voi nhung ham nhieu tham so thi uu tien dung object de truyen tham so
 export const signToken = ({
   payload,
-  privateKey = process.env.JWT_SECRET as string,
+  privateKey,
   options = {
     algorithm: 'HS256'
   }
 }: {
   payload: string | Buffer | object
-  privateKey?: string
+  privateKey: string
   options?: jwt.SignOptions
 }) => {
   return new Promise<string>((resolve, reject) => {
@@ -27,10 +27,10 @@ export const signToken = ({
 
 export const verifyToken = ({
   token,
-  privateKey = process.env.JWT_SECRET as string
+  privateKey
 }: {
   token: string
-  privateKey?: string
+  privateKey: string
 }) => {
   return new Promise<TokenPayLoad>((resolve, reject) => {
     jwt.verify(token, privateKey, (error, token_decoded) => {
