@@ -14,6 +14,11 @@ export interface TokenPayLoad extends JwtPayload {
   token_type: TokenType
 }
 
+
+export interface VerifyEmailReqBody {
+  email_verify_token: string
+}
+
 export interface LogoutRequestBody {
   refresh_token: string
 }

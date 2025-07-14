@@ -2,11 +2,12 @@ import { ObjectId } from 'mongodb'
 import { Request, Response } from 'express'
 import usersService from '~/services/users.services'
 import { NextFunction, ParamsDictionary } from 'express-serve-static-core'
-import { LogoutRequestBody, RegisterRequestBody, TokenPayLoad } from '~/models/requests/User.requests'
+import { LogoutRequestBody, RegisterRequestBody, TokenPayLoad, VerifyEmailReqBody } from '~/models/requests/User.requests'
 import User from '~/models/schemas/User.schema'
 import { usersMessages } from '~/constants/messages'
 import databaseService from '~/services/database.services'
 import httpStatus from '~/constants/httpStatus'
+import { UserVerifyStatus } from '~/constants/enums'
 type ResponseController = (req: Request, res: Response, next: NextFunction) => void
 export const loginController: ResponseController = async (req: Request, res: Response) => {
   const user = req.user as User
@@ -38,9 +39,9 @@ export const logoutController: ResponseController = async (
     result
   })
 }
-export const emailVerifyController: ResponseController = async (req: Request, res: Response, next: NextFunction) => {
+export const emailVerifyController: ResponseController = async (req: Request<ParamsDictionary, any, VerifyEmailReqBody>, res: Response, next: NextFunction) => {
   const { user_id } = req.decoded_email_verify_token as TokenPayLoad
-  const user = await databaseService.users.findOne({_id: new ObjectId(user_id)})
+  const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
   if (!user) {
     return res.status(httpStatus.NOT_FOUND).json({
       message: usersMessages.USER_NOT_FOUND
@@ -56,6 +57,28 @@ export const emailVerifyController: ResponseController = async (req: Request, re
   const result = await usersService.verifyEmail(user_id)
   return res.status(httpStatus.OK).json({
     message: usersMessages.EMAIL_VERIFED_SUCCESS,
+    result
+  })
+}
+export const resendVerifyEmailController: ResponseController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { user_id } = req.decoded_authorization as TokenPayLoad
+  const user = await databaseService.users.findOne({_id: new ObjectId(user_id)})
+  if (!user) {
+    return res.status(httpStatus.NOT_FOUND).json({
+      message: usersMessages.USER_NOT_FOUND
+    })
+  }
+  if (user.verify === UserVerifyStatus.Verified) {
+    return res.status(httpStatus.BAD_REQUEST).json({
+      message: usersMessages.EMAIL_ALREADY_VERIFIED_BEFORE
+    })
+  }
+  const result = await usersService.resendVerifyEmail(user_id)
+  return res.status(httpStatus.ACCEPTED).json({
     result
   })
 }
