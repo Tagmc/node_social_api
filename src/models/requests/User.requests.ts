@@ -22,6 +22,10 @@ export interface VerifyEmailReqBody {
   email_verify_token: string
 }
 
+export interface VerifyForgotPasswordReqBody {
+  forgot_password_token: string
+}
+
 export interface LogoutRequestBody {
   refresh_token: string
 }

@@ -1,6 +1,6 @@
-import { emailVerifyTokenValidator, forgotPasswordValidator, refreshTokenValidator } from './../middlewares/users.middlewares'
+import { emailVerifyTokenValidator, forgotPasswordValidator, refreshTokenValidator, verifyForgotPasswordTokenValidator } from './../middlewares/users.middlewares'
 import { Router } from 'express'
-import { emailVerifyController, forgotPasswordController, loginController, logoutController, registerController, resendVerifyEmailController } from '~/controllers/users.controllers'
+import { emailVerifyController, forgotPasswordController, loginController, logoutController, registerController, resendVerifyEmailController, verifyForgotPasswordController } from '~/controllers/users.controllers'
 import { accessTokenValidator, loginValidator, registerValidator } from '~/middlewares/users.middlewares'
 import { wrapRequestHandler } from '~/utils/handlers'
 
@@ -49,4 +49,11 @@ Method: POST
 Header: { email: string }
 */
 usersRouter.post('/forgot-password', forgotPasswordValidator, wrapRequestHandler(forgotPasswordController))
+/*
+Description. Verify link in email to reset password
+Path:  /verify-forgot-password
+Method: POST
+Header: { forgot_password_token: string }
+*/
+usersRouter.post('/verify-forgot-password', verifyForgotPasswordTokenValidator, wrapRequestHandler(verifyForgotPasswordController))
 export default usersRouter

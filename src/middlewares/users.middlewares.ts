@@ -2,6 +2,7 @@ import { Request } from 'express'
 import { checkSchema } from 'express-validator'
 import { JsonWebTokenError } from 'jsonwebtoken'
 import { capitalize } from 'lodash'
+import { ObjectId } from 'mongodb'
 import httpStatus from '~/constants/httpStatus'
 import { usersMessages } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
@@ -293,7 +294,7 @@ export const forgotPasswordValidator = validate(
         custom: {
           options: async (value, { req }) => {
             const user = await databaseService.users.findOne({
-              email: value,
+              email: value
             })
             if (user === null) {
               throw new Error(usersMessages.USER_NOT_FOUND)
@@ -303,6 +304,59 @@ export const forgotPasswordValidator = validate(
           }
         }
       }
-    }, ['body']
+    },
+    ['body']
+  )
+)
+
+export const verifyForgotPasswordTokenValidator = validate(
+  checkSchema(
+    {
+      forgot_password_token: {
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            if (!value) {
+              throw new ErrorWithStatus({
+                message: usersMessages.FORGOT_PASSWORD_TOKEN_IS_REQUIRED,
+                status: httpStatus.UNAUTHORIZED
+              })
+            }
+            try {
+              const decoded_forgot_password_token = await verifyToken({
+                token: value,
+                privateKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string
+              })
+              const { user_id } = decoded_forgot_password_token
+              //2 doan code await khong lien quan den nhau nen co the dung Promise.all de no chay song song toi uu hieu suat
+              const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
+
+              if (user === null) {
+                throw new ErrorWithStatus({
+                  message: usersMessages.USER_NOT_FOUND,
+                  status: httpStatus.NOT_FOUND
+                })
+              }
+              if (user.forgot_password_token !== value) {
+                throw new ErrorWithStatus({
+                  message: usersMessages.FORGOT_PASSWORD_TOKEN_INVALID,
+                  status: httpStatus.UNAUTHORIZED
+                })
+              }
+            } catch (error) {
+              if (error instanceof JsonWebTokenError) {
+                throw new ErrorWithStatus({
+                  message: capitalize(error.message),
+                  status: httpStatus.UNAUTHORIZED
+                })
+              }
+              throw error
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['body']
   )
 )
