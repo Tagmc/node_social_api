@@ -1,6 +1,6 @@
 import { emailVerifyTokenValidator, forgotPasswordValidator, refreshTokenValidator, resetPasswordValidator, verifyForgotPasswordTokenValidator } from './../middlewares/users.middlewares'
 import { Router } from 'express'
-import { emailVerifyController, forgotPasswordController, loginController, logoutController, registerController, resendVerifyEmailController, resetPasswordController, verifyForgotPasswordController } from '~/controllers/users.controllers'
+import { emailVerifyController, forgotPasswordController, getMeController, loginController, logoutController, registerController, resendVerifyEmailController, resetPasswordController, verifyForgotPasswordController } from '~/controllers/users.controllers'
 import { accessTokenValidator, loginValidator, registerValidator } from '~/middlewares/users.middlewares'
 import { wrapRequestHandler } from '~/utils/handlers'
 
@@ -63,4 +63,11 @@ Method: POST
 Header: { forgot_password_token: string, password: string, confirm_password: string }
 */
 usersRouter.post('/verify-forgot-password', resetPasswordValidator, wrapRequestHandler(resetPasswordController))
+/*
+Description. Get my profile
+Path:  /me
+Method: GET
+Header: { Authorization: Bearer <access_token> }
+*/
+usersRouter.get('/me', accessTokenValidator, wrapRequestHandler(getMeController))
 export default usersRouter
