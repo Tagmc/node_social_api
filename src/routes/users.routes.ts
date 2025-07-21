@@ -1,6 +1,6 @@
-import { emailVerifyTokenValidator, forgotPasswordValidator, refreshTokenValidator, resetPasswordValidator, verifyForgotPasswordTokenValidator } from './../middlewares/users.middlewares'
+import { emailVerifyTokenValidator, forgotPasswordValidator, refreshTokenValidator, resetPasswordValidator, verifiedUserValidator, verifyForgotPasswordTokenValidator } from './../middlewares/users.middlewares'
 import { Router } from 'express'
-import { emailVerifyController, forgotPasswordController, getMeController, loginController, logoutController, registerController, resendVerifyEmailController, resetPasswordController, verifyForgotPasswordController } from '~/controllers/users.controllers'
+import { emailVerifyController, forgotPasswordController, getMeController, loginController, logoutController, registerController, resendVerifyEmailController, resetPasswordController, updateMeController, verifyForgotPasswordController } from '~/controllers/users.controllers'
 import { accessTokenValidator, loginValidator, registerValidator } from '~/middlewares/users.middlewares'
 import { wrapRequestHandler } from '~/utils/handlers'
 
@@ -70,4 +70,12 @@ Method: GET
 Header: { Authorization: Bearer <access_token> }
 */
 usersRouter.get('/me', accessTokenValidator, wrapRequestHandler(getMeController))
+/*
+Description. Get my profile
+Path:  /me
+Method: PATCH
+Header: { Authorization: Bearer <access_token> }
+Body: userSchema
+*/
+usersRouter.patch('/me', accessTokenValidator, verifiedUserValidator, wrapRequestHandler(updateMeController))
 export default usersRouter
